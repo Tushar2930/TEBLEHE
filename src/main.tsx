@@ -3,6 +3,16 @@ import ReactDOM from 'react-dom/client'
 
 import './index.css'
 
+// fetch data from api
+const fetchData = async () => {
+  const response = await fetch('https://s3-ap-southeast-1.amazonaws.com/he-public-data/reciped9d7b8c.json')
+  const data = await response.json()
+  console.log(data)
+  return data
+}
+
+
+
 import {
   createColumnHelper,
   flexRender,
@@ -11,78 +21,69 @@ import {
 } from '@tanstack/react-table'
 
 type Person = {
-  firstName: string
-  lastName: string
-  age: number
-  visits: number
-  status: string
-  progress: number
+  id:number
+  name: string
+  image: string
+  category: string
+  label: string
+  price: string
+  description: string
 }
-
-
-const defaultData: Person[] = [
-  {
-    firstName: 'tanner',
-    lastName: 'linsley',
-    age: 24,
-    visits: 100,
-    status: 'In Relationship',
-    progress: 50,
-  },
-  {
-    firstName: 'tandy',
-    lastName: 'miller',
-    age: 40,
-    visits: 40,
-    status: 'Single',
-    progress: 80,
-  },
-  {
-    firstName: 'joe',
-    lastName: 'dirte',
-    age: 45,
-    visits: 20,
-    status: 'Complicated',
-    progress: 10,
-  },
-]
 
 const columnHelper = createColumnHelper<Person>()
 
 const columns = [
-  columnHelper.accessor('firstName', {
+  columnHelper.accessor('name', {
     cell: info => info.getValue(),
     footer: info => info.column.id,
   }),
-  columnHelper.accessor(row => row.lastName, {
-    id: 'lastName',
+  columnHelper.accessor(row => row.category, {
+    id: 'category',
     cell: info => <i>{info.getValue()}</i>,
-    header: () => <span>Last Name</span>,
+    header: () => <span>Category</span>,
     footer: info => info.column.id,
   }),
-  columnHelper.accessor('age', {
-    header: () => 'Age',
+  columnHelper.accessor('price', {
+    header: () => 'Price',
     cell: info => info.renderValue(),
     footer: info => info.column.id,
   }),
-  columnHelper.accessor('visits', {
-    header: () => <span>Visits</span>,
+  columnHelper.accessor('label', {
+    header: () => <span>Label</span>,
     footer: info => info.column.id,
   }),
-  columnHelper.accessor('status', {
-    header: 'Status',
-    footer: info => info.column.id,
-  }),
-  columnHelper.accessor('progress', {
-    header: 'Profile Progress',
+  columnHelper.accessor('description', {
+    header: 'Description',
     footer: info => info.column.id,
   }),
 ]
 
 function App() {
-  const [data, setData] = React.useState(() => [...defaultData])
-  const rerender = React.useReducer(() => ({}), {})[1]
+  const [data, setData] = React.useState([] as Person[])
+  const rerender = async () => {
+    const data = await fetchData()
+    setData(data)
+  }
 
+
+  React.useEffect(() => {
+  (async () => {
+    const data = await fetchData()
+    //data needs to be sorted by name and price columns
+    data.sort((a,b) => {
+      if(a.name < b.name) { return -1; }
+      if(a.name > b.name) { return 1; }
+      return 0;
+    })
+    data.sort((a,b) => {
+      if(a.price < b.price) { return -1; }
+      if(a.price > b.price) { return 1; }
+      return 0;
+    })
+    setData(data)
+    console.log(data)
+  })()
+}, [])
   const table = useReactTable({
     data,
     columns,
